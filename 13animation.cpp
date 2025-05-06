@@ -1,53 +1,77 @@
-#include<GL/glut.h>
-#include<iostream>
+#include <GL/glut.h>
+#include <iostream>
+#include <cmath>
 
 using namespace std;
-float x=0, y=0, dx=0.02, dy=0.023, r=0.1;
-void display()
-{
-	glClear(GL_COLOR_BUFFER_BIT);
-	glLoadIdentity();
 
-	glTranslatef(x,y,0);
-	glColor3f(0.2,0.8,0.2);
+float x = 100, y = 100; // Position of object
+float dx = 2, dy = 1;    // Speed of movement
+float obj_size = 30;      // Size of object (renamed from size to obj_size)
+int windowWidth = 640, windowHeight = 480;
 
-	glutSolidSphere(r,50,30);
-	glutSwapBuffers();
+void init() {
+    glClearColor(1, 1, 1, 0);
+    glMatrixMode(GL_PROJECTION);
+    gluOrtho2D(0, windowWidth, 0, windowHeight);
+}
 
+void drawObject() {
+    // Draw a simple circle
+    glColor3f(1, 0, 0);
+    glBegin(GL_POLYGON);
+    for (int i = 0; i < 360; i += 30) {
+        float rad = i * M_PI / 180;
+        glVertex2f(x + obj_size * std::cos(rad), y + obj_size * std::sin(rad));
+    }
+    glEnd();
+    glFlush();
 }
-void update(int)
-{
-	x=x+dx;
-	y=y+dy;
 
-	if(x+r > 1 || x-r <-1) {	
-		dx=-dx;
-	}
-	if( y+r > 1 || y-r <-1) {
-		dy=-dy;
-	}
-	glutPostRedisplay();
-	glutTimerFunc(6,update,0);
+void animate(int value) {
+    // Clear the screen
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // Update position with bouncing
+    x += dx;
+    y += dy;
+
+    // Bounce off walls
+    if (x > windowWidth - obj_size || x < obj_size) dx = -dx;
+    if (y > windowHeight - obj_size || y < obj_size) dy = -dy;
+
+    // Draw the object
+    drawObject();
+
+    // Call animate again after 16ms (about 60fps)
+    glutTimerFunc(16, animate, 0);
 }
-void reshape(int w,int h)
-{
-	glViewport(0,0,w,h);
-	glLoadIdentity();
-	glMatrixMode(GL_PROJECTION);
-	gluOrtho2D(-1,1,-1,1);
-	glMatrixMode(GL_MODELVIEW);
+
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT);
+    drawObject();
 }
-int main(int argc, char **argv)
-{
-	glutInit(&argc,argv);
-	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-	glutInitWindowPosition(100,100);
-	glutInitWindowSize(640,480);
-	glutCreateWindow("Bouncing Ball");
-	glClearColor(2,1.2,0,0);
-	
-	glutDisplayFunc(display);
-	glutReshapeFunc(reshape);
-	glutTimerFunc(10,update,0);
-	glutMainLoop();
+
+int main(int argc, char** argv) {
+    cout << "Initial position (x y): ";
+    cin >> x >> y;
+    cout << "Speed (dx dy): ";
+    cin >> dx >> dy;
+    cout << "Size: ";
+    cin >> obj_size;
+
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+    glutInitWindowSize(windowWidth, windowHeight);
+    glutInitWindowPosition(200, 200);
+    glutCreateWindow("Animation");
+
+    init();
+    glutDisplayFunc(display);
+    glutTimerFunc(0, animate, 0);
+    glutMainLoop();
+    return 0;
 }
+/*Initial position (x y): 150 200
+Speed (dx dy): 4 3
+Size: 25
+*/
